@@ -2,27 +2,27 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from google import genai
+import google.generativeai as genai
 from keys import API_KEY
 
 def chatbot():
   print("Hello! I'm Suggestify, your TV show recommendation assistant.")
-  print("I can answer your queries.")
+  print("I can answer your queries about TV shows. Type 'exit' to leave the chat.")
+
+  genai.configure(api_key=API_KEY)
+
+  model = genai.GenerativeModel("gemini-2.0-flash")
   
-  client = genai.Client(api_key="API_KEY")
+  chat = model.start_chat()
 
   while True:
     prompt = input("You: ")
     if prompt.lower() == "exit":
-      print("Goodbye!")
+      print("Suggestify: Goodbye! Have a great day!")
       break
-  
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-    )
-    print("Suggestify:", response.text)
 
+    response = chat.send_message(prompt)
+    print("Suggestify:", response.text)
 
 def show_recommendation(genre_input):
   print("Let's find a TV show for you!")
@@ -212,17 +212,6 @@ if __name__ == "__main__":
   print("Welcome to Suggestify!")
   print("This app will help you find TV shows according to your preferences.")
   
-  print("You can ask me anything about TV shows or genres.")
-  ans = input("Do you want to chat with me? (yes/no): ").strip().lower()
-  if ans == "yes":
-    chatbot()
-  elif ans == "no":
-    print("No problem! Let's find a TV show for you.")
-  elif ans == "exit":
-    print("Thank you for using Suggestify! Goodbye!")
-  else:
-    print("Invalid input. Please answer with 'yes' or 'no'.")
-  
   ans = input("Do you have genre in mind? (yes/no): ").strip().lower()
   if ans == "yes":
     genre = input("Please enter the genre you are interested in: ").strip().capitalize()
@@ -231,6 +220,17 @@ if __name__ == "__main__":
   elif ans == "no":
     print("No problem! Let's find out your genre preference.")
     genre_suggestion()
+  elif ans == "exit":
+    print("Thank you for using Suggestify! Goodbye!")
+  else:
+    print("Invalid input. Please answer with 'yes' or 'no'.")
+    
+  print("You can ask me anything about TV shows or genres.")
+  ans = input("Do you have any queries? (yes/no): ").strip().lower()
+  if ans == "yes":
+    chatbot()
+  elif ans == "no":
+    print("No problem! Let's find a TV show for you.")
   elif ans == "exit":
     print("Thank you for using Suggestify! Goodbye!")
   else:
