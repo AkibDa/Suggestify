@@ -2,6 +2,27 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
+from google import genai
+from keys import API_KEY
+
+def chatbot():
+  print("Hello! I'm Suggestify, your TV show recommendation assistant.")
+  print("I can answer your queries.")
+  
+  client = genai.Client(api_key="API_KEY")
+
+  while True:
+    prompt = input("You: ")
+    if prompt.lower() == "exit":
+      print("Goodbye!")
+      break
+  
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+    )
+    print("Suggestify:", response.text)
+
 
 def show_recommendation(genre_input):
   print("Let's find a TV show for you!")
@@ -190,6 +211,17 @@ def genre_suggestion():
 if __name__ == "__main__":
   print("Welcome to Suggestify!")
   print("This app will help you find TV shows according to your preferences.")
+  
+  print("You can ask me anything about TV shows or genres.")
+  ans = input("Do you want to chat with me? (yes/no): ").strip().lower()
+  if ans == "yes":
+    chatbot()
+  elif ans == "no":
+    print("No problem! Let's find a TV show for you.")
+  elif ans == "exit":
+    print("Thank you for using Suggestify! Goodbye!")
+  else:
+    print("Invalid input. Please answer with 'yes' or 'no'.")
   
   ans = input("Do you have genre in mind? (yes/no): ").strip().lower()
   if ans == "yes":
