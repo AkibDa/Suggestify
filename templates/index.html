@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggestify - Your one stop for entertainment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./static/styles.css">
+</head>
+<body>
+  <div class="container-fluid">
+    <header class="text-center py-4 bg-primary text-white rounded-bottom">
+      <h1>Suggestify</h1>
+      <p class="lead">Your personal TV show recommendation assistant</p>
+    </header>
+
+    <main class="my-4">
+      <div id="main-section" class="card p-4 mb-4">
+        <h2 class="text-center mb-4">How would you like to find shows?</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body text-center">
+                <h3>I know my genre</h3>
+                <p>Get recommendations based on your preferred genre</p>
+                <button id="genre-know-btn" class="btn btn-primary">Select Genre</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body text-center">
+                <h3>Help me choose</h3>
+                <p>Take a quick quiz to discover your perfect genre</p>
+                <button id="genre-quiz-btn" class="btn btn-primary">Take Quiz</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-4">
+            <button id="chatbot-btn" class="btn btn-outline-secondary">Ask me anything about TV shows</button>
+        </div>
+      </div>
+
+      <div id="genre-selection-section" class="card p-4 mb-4 d-none">
+        <h2 class="text-center mb-4">Select Your Preferred Genre</h2>
+        <div class="row genre-buttons">
+        </div>
+        <div class="text-center mt-4">
+          <button id="back-to-main-from-genre" class="btn btn-secondary">Back</button>
+        </div>
+      </div>
+
+      <div id="quiz-section" class="card p-4 mb-4 d-none">
+        <div id="quiz-progress" class="progress mb-3">
+          <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+        </div>
+        <h2 id="quiz-question" class="text-center mb-4"></h2>
+        <div id="quiz-options" class="row g-3">
+        </div>
+        <div class="text-center mt-4">
+          <button id="back-to-main-from-quiz" class="btn btn-secondary">Back</button>
+        </div>
+      </div>
+
+      <div id="results-section" class="card p-4 mb-4 d-none">
+        <h2 class="text-center mb-4">Recommended Shows For You</h2>
+        <div id="recommended-shows" class="row">
+        </div>
+        <div class="text-center mt-4">
+          <button id="back-to-main-from-results" class="btn btn-primary">Start Over</button>
+        </div>
+      </div>
+
+      <div id="chatbot-section" class="card p-4 mb-4 d-none">
+        <h2 class="text-center mb-4">Suggestify Assistant</h2>
+        <div class="chat-container">
+          <div id="chat-messages" class="chat-messages mb-3">
+            <div class="message bot-message">Hello! I'm Suggestify, your TV show recommendation assistant. How can I help you today?</div>
+          </div>
+          <div class="input-group">
+            <input type="text" id="chat-input" class="form-control" placeholder="Type your message here...">
+            <button id="send-chat-btn" class="btn btn-primary">Send</button>
+          </div>
+          <div class="text-center mt-3">
+            <button id="exit-chat-btn" class="btn btn-secondary">Exit Chat</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="text-center py-3 text-muted">
+      <p>© 2025 Suggestify - Your one stop for entertainment</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./static/script.js"></script>
+</body>
+</html>
