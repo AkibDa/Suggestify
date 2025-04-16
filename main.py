@@ -1,21 +1,41 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-def show_recommendation(genres):
+def show_recommendation(genre_input):
   print("Let's find a TV show for you!")
-  
-  df = pd.read_csv("imdb_top_5000_tv_shows.csv")
-  model = RandomForestClassifier(random_state=0)
-  
-  X = df
-  y = genres
-  model.fit(X, y)
-  recommendations = model.predict(X)
-  print("Here are some TV shows you might like:")
-  for i in range(5):
-    print(f"- {recommendations[i]}")
-  
 
+  df = pd.read_csv("data/imdb_top_5000_tv_shows.csv")
+
+  genre_input_list = [g.strip().lower() for g in genre_input.split(",")]
+
+  df['genres_clean'] = df['genres'].str.lower()
+
+  filtered_df = df[df['genres_clean'].apply(lambda g: all(genre in g for genre in genre_input_list))]
+
+  if filtered_df.empty:
+    print(f"Sorry, no shows found for the genre(s): {genre_input}")
+    return
+
+  tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+  title_tfidf = tfidf_vectorizer.fit_transform(df['primaryTitle'])
+
+  X = title_tfidf
+  y = df['genres_clean']
+
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+  model = RandomForestClassifier(random_state=0)
+  model.fit(X_train, y_train)
+
+  print("Here are some TV shows you might like:")
+  for i in range(min(5, len(filtered_df))):
+    show = filtered_df.iloc[i]
+    print(f"- {show['primaryTitle']} ({show['startYear']}) - Genre: {show['genres']}")
+
+
+  
 
 def genre_suggestion():
   print("Let's play a game to find out your preferred genre!")
@@ -174,7 +194,7 @@ if __name__ == "__main__":
   
   ans = input("Do you have genre in mind? (yes/no): ").strip().lower()
   if ans == "yes":
-    genre = input("Please enter the genre you are interested in: ").strip().lower()
+    genre = input("Please enter the genre you are interested in: ").strip().capitalize()
     print(f"Great! You have selected the genre: {genre}.")
     show_recommendation(genre)
   elif ans == "no":
