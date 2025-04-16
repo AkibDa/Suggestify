@@ -8,7 +8,10 @@ def show_recommendation(genre_input):
 
   df = pd.read_csv("data/imdb_top_5000_tv_shows.csv")
 
-  genre_input_list = [g.strip().lower() for g in genre_input.split(",")]
+  if isinstance(genre_input, list):
+    genre_input_list = [g.strip().lower() for g in genre_input]
+  else:
+    genre_input_list = [g.strip().lower() for g in genre_input.split(",")]
 
   df['genres_clean'] = df['genres'].str.lower()
 
@@ -33,9 +36,6 @@ def show_recommendation(genre_input):
   for i in range(min(5, len(filtered_df))):
     show = filtered_df.iloc[i]
     print(f"- {show['primaryTitle']} ({show['startYear']}) - Genre: {show['genres']}")
-
-
-  
 
 def genre_suggestion():
   print("Let's play a game to find out your preferred genre!")
@@ -186,7 +186,6 @@ def genre_suggestion():
     print(f"- {genre}")
   print("Thank you for participating in the quiz!")
   show_recommendation(top_genres)
-
 
 if __name__ == "__main__":
   print("Welcome to Suggestify!")
