@@ -1,3 +1,22 @@
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
+def show_recommendation(genres):
+  print("Let's find a TV show for you!")
+  
+  df = pd.read_csv("imdb_top_5000_tv_shows.csv")
+  model = RandomForestClassifier(random_state=0)
+  
+  X = df
+  y = genres
+  model.fit(X, y)
+  recommendations = model.predict(X)
+  print("Here are some TV shows you might like:")
+  for i in range(5):
+    print(f"- {recommendations[i]}")
+  
+
+
 def genre_suggestion():
   print("Let's play a game to find out your preferred genre!")
   print("We will ask you a series of questions to determine your genre preference.")
@@ -146,6 +165,7 @@ def genre_suggestion():
   for genre in top_genres:
     print(f"- {genre}")
   print("Thank you for participating in the quiz!")
+  show_recommendation(top_genres)
 
 
 if __name__ == "__main__":
@@ -156,6 +176,7 @@ if __name__ == "__main__":
   if ans == "yes":
     genre = input("Please enter the genre you are interested in: ").strip().lower()
     print(f"Great! You have selected the genre: {genre}.")
+    show_recommendation(genre)
   elif ans == "no":
     print("No problem! Let's find out your genre preference.")
     genre_suggestion()
