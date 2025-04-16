@@ -52,6 +52,20 @@ def genre_suggestion():
 ]
 
   genre_scores = {}
+  user_answers = []
+  
+  for question in quiz_questions:
+    print(question["question"])
+    for option, genres in question["options"].items():
+      if isinstance(genres, list):
+        genres = ", ".join(genres)
+      print(f"{option}: {genres}")
+    answer = input("Your answer (A/B/C/D): ").strip().upper()
+    while answer not in question["options"]:
+      print("Invalid option. Please choose A, B, C, or D.")
+      answer = input("Your answer (A/B/C/D): ").strip().upper()
+    user_answers.append(answer)
+  print("Thank you for your answers! Let's calculate your preferred genre.")
 
   for i, answer in enumerate(user_answers):
     options = quiz_questions[i]["options"]
@@ -71,10 +85,6 @@ def genre_suggestion():
 
   return top_genres
 
-user_answers = ["C", "B", "D", "B", "C"]  
-result = genre_suggestion(user_answers)
-
-print("🎬 Recommended Genre(s):", result)
 
 
 
