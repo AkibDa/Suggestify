@@ -119,7 +119,7 @@ def genre_suggestion():
     print(question["question"])
     for option, option_data in question["options"].items():
       print(f"{option}: {option_data['text']}")
-      answer = input("Your answer (A/B/C/D): ").strip().upper()
+    answer = input("Your answer (A/B/C/D): ").strip().upper()
     while answer not in question["options"]:
       print("Invalid option. Please choose A, B, C, or D.")
       answer = input("Your answer (A/B/C/D): ").strip().upper()
