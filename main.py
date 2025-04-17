@@ -1,68 +1,73 @@
+from flask import Flask, request, jsonify, render_template
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 import google.generativeai as genai
 from keys import API_KEY
+from flask_cors import CORS
 
-def chatbot():
-  print("Hello! I'm Suggestify, your TV show recommendation assistant.")
-  print("I can answer your queries about TV shows. Type 'exit' to leave the chat.")
+app = Flask(__name__)
+CORS(app)
 
-  genai.configure(api_key=API_KEY)
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel("gemini-2.0-flash")
 
-  model = genai.GenerativeModel("gemini-2.0-flash")
-  
-  chat = model.start_chat()
+df = pd.read_csv("data/imdb_top_5000_tv_shows.csv")
+df['genres_clean'] = df['genres'].str.lower()
 
-  while True:
-    prompt = input("You: ")
-    if prompt.lower() == "exit":
-      print("Suggestify: Goodbye! Have a great day!")
-      break
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+title_tfidf = tfidf_vectorizer.fit_transform(df['primaryTitle'])
+X = title_tfidf
+y = df['genres_clean']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+rf_model = RandomForestClassifier(random_state=0)
+rf_model.fit(X_train, y_train)
 
+@app.route('/api/recommend', methods=['POST'])
+def recommend_shows():
+    data = request.json
+    genre_input = data.get('genres', '')
+    
+    if isinstance(genre_input, list):
+        genre_input_list = [g.strip().lower() for g in genre_input]
+    else:
+        genre_input_list = [g.strip().lower() for g in genre_input.split(",")]
+    
+    filtered_df = df[df['genres_clean'].apply(lambda g: all(genre in g for genre in genre_input_list))]
+    
+    if filtered_df.empty:
+        return jsonify({"error": f"No shows found for the genre(s): {genre_input}"}), 404
+    
+    recommendations = []
+    for i in range(min(5, len(filtered_df))):
+        show = filtered_df.iloc[i]
+        recommendations.append({
+            "title": show['primaryTitle'],
+            "year": show['startYear'],
+            "genres": show['genres'],
+            "description": f"A {show['genres']} show from {show['startYear']}"
+        })
+    
+    return jsonify({"recommendations": recommendations, "genres": genre_input})
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    data = request.json
+    prompt = data.get('message', '')
+    
+    if prompt.lower() == 'exit':
+        return jsonify({"response": "Goodbye! Have a great day!"})
+    
+    chat = model.start_chat()
     response = chat.send_message(prompt)
-    print("Suggestify:", response.text)
+    return jsonify({"response": response.text})
 
-def show_recommendation(genre_input):
-  print("Let's find a TV show for you!")
-
-  df = pd.read_csv("data/imdb_top_5000_tv_shows.csv")
-
-  if isinstance(genre_input, list):
-    genre_input_list = [g.strip().lower() for g in genre_input]
-  else:
-    genre_input_list = [g.strip().lower() for g in genre_input.split(",")]
-
-  df['genres_clean'] = df['genres'].str.lower()
-
-  filtered_df = df[df['genres_clean'].apply(lambda g: all(genre in g for genre in genre_input_list))]
-
-  if filtered_df.empty:
-    print(f"Sorry, no shows found for the genre(s): {genre_input}")
-    return
-
-  tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-  title_tfidf = tfidf_vectorizer.fit_transform(df['primaryTitle'])
-
-  X = title_tfidf
-  y = df['genres_clean']
-
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-  model = RandomForestClassifier(random_state=0)
-  model.fit(X_train, y_train)
-
-  print("Here are some TV shows you might like:")
-  for i in range(min(5, len(filtered_df))):
-    show = filtered_df.iloc[i]
-    print(f"- {show['primaryTitle']} ({show['startYear']}) - Genre: {show['genres']}")
-
-def genre_suggestion():
-  print("Let's play a game to find out your preferred genre!")
-  print("We will ask you a series of questions to determine your genre preference.")
-
-  quiz_questions = [
+quiz_questions = [
     {
       "question": "What kind of story pace do you prefer?",
       "options": {
@@ -170,68 +175,31 @@ def genre_suggestion():
     }
 ]
 
+@app.route('/api/quiz/questions', methods=['GET'])
+def get_quiz_questions():
+    return jsonify({"questions": quiz_questions})
 
-  genre_scores = {}
-  user_answers = []
-  selected_answers = []
-  
-  for question in quiz_questions:
-    print(question["question"])
-    for option, option_data in question["options"].items():
-      print(f"{option}: {option_data['text']}")
-    answer = input("Your answer (A/B/C/D): ").strip().upper()
-    while answer not in question["options"]:
-      print("Invalid option. Please choose A, B, C, or D.")
-      answer = input("Your answer (A/B/C/D): ").strip().upper()
-    user_answers.append(answer)
-  print("Thank you for your answers! Let's calculate your preferred genre.")
-
-  for i, choice in enumerate(user_answers):
-    question = quiz_questions[i]
-    option = question["options"].get(choice.upper())
-
-    if not option:
-      selected_answers.append("Invalid answer")
-      continue
-
-    selected_answers.append(option["text"])
-
-    for genre in option["genres"]:
-      genre_scores[genre] = genre_scores.get(genre, 0) + 1
-
-  max_score = max(genre_scores.values())
-  top_genres = [g for g, s in genre_scores.items() if s == max_score]
-
-  print("Based on your answers, here are the genres you might enjoy:")
-  for genre in top_genres:
-    print(f"- {genre}")
-  print("Thank you for participating in the quiz!")
-  show_recommendation(top_genres)
-
-if __name__ == "__main__":
-  print("Welcome to Suggestify!")
-  print("This app will help you find TV shows according to your preferences.")
-  
-  ans = input("Do you have genre in mind? (yes/no): ").strip().lower()
-  if ans == "yes":
-    genre = input("Please enter the genre you are interested in: ").strip().capitalize()
-    print(f"Great! You have selected the genre: {genre}.")
-    show_recommendation(genre)
-  elif ans == "no":
-    print("No problem! Let's find out your genre preference.")
-    genre_suggestion()
-  elif ans == "exit":
-    print("Thank you for using Suggestify! Goodbye!")
-  else:
-    print("Invalid input. Please answer with 'yes' or 'no'.")
+@app.route('/api/quiz/result', methods=['POST'])
+def calculate_quiz_result():
+    data = request.json
+    answers = data.get('answers', [])
     
-  print("You can ask me anything about TV shows or genres.")
-  ans = input("Do you have any queries? (yes/no): ").strip().lower()
-  if ans == "yes":
-    chatbot()
-  elif ans == "no":
-    print("No problem! Let's find a TV show for you.")
-  elif ans == "exit":
-    print("Thank you for using Suggestify! Goodbye!")
-  else:
-    print("Invalid input. Please answer with 'yes' or 'no'.")
+    genre_scores = {}
+    for i, choice in enumerate(answers):
+        question = quiz_questions[i]
+        option = question['options'].get(choice.upper())
+        
+        if option:
+            for genre in option['genres']:
+                genre_scores[genre] = genre_scores.get(genre, 0) + 1
+    
+    max_score = max(genre_scores.values())
+    top_genres = [g for g, s in genre_scores.items() if s == max_score]
+    
+    return jsonify({
+        "genres": top_genres,
+        "message": "Here are the genres you might enjoy based on your answers"
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)
